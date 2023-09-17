@@ -2,10 +2,24 @@ import React, { useState, useEffect } from "react";
 import { View, ActivityIndicator, StyleSheet, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "./RootStackParamList";
 
-const LoadingPage = () => {
-  const navigation = useNavigation();
-  const [qrCodeData, setQrCodeData] = useState(null);
+type LoadingPageNavigationProp = StackNavigationProp<
+  RootStackParamList, // Replace with your route param list type
+  "Loading" // Specify the name of your screen
+>;
+
+interface LoadingPageProps {
+  navigation: LoadingPageNavigationProp;
+}
+
+// const LoadingPage = () => {
+const LoadingPage: React.FC<LoadingPageProps> = ({ navigation }) => {
+  // const navigation = useNavigation();
+  // const [qrCodeData, setQrCodeData] = useState(null);
+
+  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAsyncStorage = async () => {
@@ -50,27 +64,28 @@ const LoadingPage = () => {
   // }, []);
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 justify-center items-center">
       <Image
+        className="w-300 h-200 mb-20"
         source={require("../assets/logo.png")} // Replace with the actual path to your image
-        style={styles.image}
+        // style={styles.image}
       />
       <ActivityIndicator size="large" color="#0000ff" />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  image: {
-    width: 300, // Adjust the width and height as needed
-    height: 200,
-    marginBottom: 20, // Add spacing between the image and the activity indicator
-  },
-});
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   image: {
+//     width: 300, // Adjust the width and height as needed
+//     height: 200,
+//     marginBottom: 20, // Add spacing between the image and the activity indicator
+//   },
+// });
 
 export default LoadingPage;

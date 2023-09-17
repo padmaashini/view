@@ -5,12 +5,15 @@ import {
   StyleSheet,
   Button,
   PermissionsAndroid,
+  Alert,
 } from "react-native";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "./RootStackParamList";
 
-const troll = { monkey: "christy" };
+// const troll = { monkey: "christy" };
 // const requestCameraPermission = async () => {
 //   try {
 //     const granted = await PermissionsAndroid.request(
@@ -35,8 +38,18 @@ const troll = { monkey: "christy" };
 //   }
 // };
 
-export default function QRCodeScanner({ navigation }) {
-  const [hasPermission, setHasPermission] = useState(null);
+type LoadingPageNavigationProp = StackNavigationProp<
+  RootStackParamList, // Replace with your route param list type
+  "QRCodeScanner" // Specify the name of your screen
+>;
+
+interface LoadingPageProps {
+  navigation: LoadingPageNavigationProp;
+}
+
+const QRCodeScanner: React.FC<LoadingPageProps> = ({ navigation }) => {
+  // export default function QRCodeScanner({ navigation }) {
+  const [hasPermission, setHasPermission] = useState(false);
   const [scanned, setScanned] = useState(false);
 
   useEffect(() => {
@@ -48,9 +61,9 @@ export default function QRCodeScanner({ navigation }) {
     getBarCodeScannerPermissions();
   }, []);
 
-  const handleBarCodeScanned = async ({ type, data }) => {
+  const handleBarCodeScanned = async ({ type, data }: any) => {
     setScanned(true);
-    alert(`Room and bed number ${data} has been scanned!`);
+    Alert.alert(`Room and bed number ${data} has been scanned!`);
     try {
       await AsyncStorage.setItem("qrCodeData", data);
     } catch (error) {
@@ -61,9 +74,9 @@ export default function QRCodeScanner({ navigation }) {
     // navigation.navigate("Home");
   };
 
-  if (hasPermission === null) {
-    return <Text>Requesting for camera permission</Text>;
-  }
+  // if (hasPermission === null) {
+  //   return <Text>Requesting for camera permission</Text>;
+  // }
   if (hasPermission === false) {
     // return (
     //   //   <Button title="request permissions" onPress={requestCameraPermission} />
@@ -73,32 +86,37 @@ export default function QRCodeScanner({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 flex-col">
+      {/* style={styles.container}> */}
       <BarCodeScanner
         onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
         style={StyleSheet.absoluteFillObject}
       />
       {scanned && (
-        <Button
-          style={styles.button}
-          title={"Tap to Scan Again"}
-          onPress={() => setScanned(false)}
-        />
+        <View className="absolute bottom-0 mx-0 my-8">
+          {/* style={styles.button}> */}
+          <Button
+            title={"Tap to Scan Again"}
+            onPress={() => setScanned(false)}
+          />
+        </View>
       )}
     </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: "column",
-    // justifyContent: "center",
-  },
-  button: {
-    position: "absolute",
-    bottom: 0,
-    marginEnd: 0,
-    marginVertical: 8,
-  },
-});
+// const styles = StyleSheet.create({
+// container: {
+//   flex: 1,
+//   flexDirection: "column",
+//   // justifyContent: "center",
+// },
+// button: {
+//   position: "absolute",
+//   bottom: 0,
+//   marginEnd: 0,
+//   marginVertical: 8,
+// },
+// });
+
+export default QRCodeScanner;

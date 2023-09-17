@@ -7,9 +7,22 @@ import LoginPage from "./components/LoginPage";
 import HomePage from "./components/HomePage";
 import QRCodeScannerPage from "./components/QRCodeScannerPage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { View, Text } from "react-native";
+import { View, Text, Image } from "react-native";
 
 const Stack = createStackNavigator();
+
+const CustomHeader = () => {
+  return (
+    <View className="flex-row items-center">
+      {/* style={{ flexDirection: 'row', alignItems: 'center' }}> */}
+      <Image
+        className="w-[35px] h-[35px] mt-2"
+        source={require("./assets/header.png")} // Replace with the path to your image
+        // style={{ width: 30, height: 30, marginRight: 10 }}
+      />
+    </View>
+  );
+};
 
 const App = () => {
   // const [initialRoute, setInitialRoute] = useState("Loading");
@@ -40,22 +53,24 @@ const App = () => {
         <Stack.Screen
           name="Login"
           component={LoginPage}
-          options={{ headerLeft: null, headerTitle: "PatientCompanion" }}
+          options={{
+            headerLeft: null,
+            headerTitle: "PatientCompanion",
+          }}
         />
         <Stack.Screen
           name="Home"
           component={HomePage}
           options={{
             headerLeft: null,
-            headerTitle: "PatientCompanion",
+            headerTitle: () => <CustomHeader />,
             headerStyle: {
-              backgroundColor: "lightgray",
+              backgroundColor: "#FFFFFB",
+              opacity: 90,
             },
             headerRight: () => (
               <View style={{ marginRight: 10 }}>
-                <Text style={{ fontSize: 18, fontWeight: 400 }}>
-                  Grand River Hospital
-                </Text>
+                <Text className="text-black text-lg">Grand River Hospital</Text>
               </View>
             ),
           }}
