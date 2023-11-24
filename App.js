@@ -8,6 +8,7 @@ import HomePage from "./components/HomePage";
 import QRCodeScannerPage from "./components/QRCodeScannerPage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, Text, Image } from "react-native";
+import { MedplumClient } from '@medplum/core';
 
 const Stack = createStackNavigator();
 
@@ -45,19 +46,19 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Loading">
-        <Stack.Screen
+        {/* <Stack.Screen
           name="Loading"
           component={LoadingPage}
           options={{ headerShown: false }} // Hide the navigation bar for LoadingScreen
-        />
-        <Stack.Screen
+        /> */}
+        {/* <Stack.Screen
           name="Login"
           component={LoginPage}
           options={{
             headerLeft: null,
             headerTitle: "PatientCompanion",
           }}
-        />
+        /> */}
         <Stack.Screen
           name="Home"
           component={HomePage}
@@ -75,11 +76,11 @@ const App = () => {
             ),
           }}
         />
-        <Stack.Screen
+        {/* <Stack.Screen
           name="QRCodeScanner"
           component={QRCodeScannerPage}
-          options={{ headerTitle: "PatientCompanion" }}
-        />
+          options={{ headerTitle: "PatientCompanion" }} */}
+        {/* /> */}
         {/* Add more screens here */}
       </Stack.Navigator>
     </NavigationContainer>

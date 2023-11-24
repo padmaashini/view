@@ -1,198 +1,232 @@
-// main page with requests
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   Image,
-  Button,
   TouchableOpacity,
   StyleSheet,
   FlatList,
   Dimensions,
-} from "react-native";
-import { useRoute } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-// import Icon from "react-native-vector-icons/FontAwesome";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "./RootStackParamList";
-import { RouteProp } from "@react-navigation/native";
+  Modal
+} from 'react-native';
+import { MedplumClient } from '@medplum/core';
 
-const { width } = Dimensions.get("window");
+const { width } = Dimensions.get('window');
 const numColumns = 2;
+const tileSize = width / numColumns;
 const data = [
   {
-    id: "1",
-    imageSource: require("../assets/user.png"),
-    text: "View my requests",
+    id: '1',
+    imageSource: require('../assets/user.png'),
+    text: 'View my requests',
   },
-  { id: "2", imageSource: require("../assets/watercup.png"), text: "Water" },
-  { id: "3", imageSource: require("../assets/toilet.png"), text: "Washroom" },
-  { id: "4", imageSource: require("../assets/pain.png"), text: "Pain" },
-  { id: "5", imageSource: require("../assets/bed.png"), text: "Bed" },
-  { id: "6", imageSource: require("../assets/food.png"), text: "Food" },
+  { id: '2', imageSource: require('../assets/watercup.png'), text: 'Water' },
+  { id: '3', imageSource: require('../assets/toilet.png'), text: 'Washroom' },
+  { id: '4', imageSource: require('../assets/pain.png'), text: 'Pain' },
+  { id: '5', imageSource: require('../assets/bed.png'), text: 'Bed' },
+  { id: '6', imageSource: require('../assets/food.png'), text: 'Food' },
 ];
 
-interface BoxItemProps {
-  item: {
-    // icon: string;
-    text: string;
-    imageSource: any;
-  };
-}
-
-const BoxItem: React.FC<BoxItemProps> = ({ item }) => (
-  // const BoxItem = ({ item }: { item: string; text: string }) => (
-  <View
-    className="bg-white m-[10] flex-1 justify-center items-center border-black"
-    style={[
-      //   // styles.box,
-      {
-        backgroundColor: "white",
-        width: width / numColumns,
-        height: width / 2.3,
-        margin: 10,
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        borderWidth: 1.5,
-        borderColor: "black",
-        borderRadius: 15,
-      },
-    ]}
-  >
-    <Image className="w-[60px] h-[60px]" source={item.imageSource} />
-    <Text className="mt-2 text-[25px] font-medium">{item.text}</Text>
-    {/* style={styles.text}>{item.text}</Text> */}
-  </View>
-);
-
-type HomeScreenRouteProp = RouteProp<RootStackParamList, "Home">;
-
-// const HomePage = () => {
-const HomePage: React.FC<{ route: HomeScreenRouteProp }> = ({ route }) => {
-  // const { qrCodeData } = route.params;
-  // const route = useRoute();
-  // const route = useRoute<HomeScreenParams>(); // Provide the type parameter
-  // const qrCodeData = route.params?.qrCodeData;
-  const { qrCodeData } = route.params;
-
-  //   useEffect(() => {
-  //     const checkAsyncStorage = async () => {
-  //       try {
-  //         // await AsyncStorage.setItem("qrCodeData", "mockData");
-  //         const data = await AsyncStorage.getItem("qrCodeData");
-  //       } catch (error) {
-  //         console.error("Error checking AsyncStorage:", error);
-  //       }
-  //     };
-  //     checkAsyncStorage();
-  //   });
-
-  //   const retrieveData = async () => {
-  //     try {
-  //       const data = await AsyncStorage.getItem("qrCodeData"); // Retrieve data
-  //       console.log("Retrieved data in the home page:", data);
-  //     } catch (error) {
-  //       console.error("Error retrieving data:", error);
-  //     }
-  //   };
-  //   retrieveData();
+const BoxItem = ({ item, onPress }) => {
   return (
-    <View className="flex-1 bg-[#f0f9ff] flex-col">
-      {/* style={[styles.container, { flexDirection: "column" }]}> */}
-      {/* Emergency button */}
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          margin: 5,
-        }}
-      >
-        <TouchableOpacity
-          className="bg-[#FF0000] rounded-[10px] w-[80%] h-[85%] content-center items-center justify-center border-2 border-black"
-          // style={styles.button}
-        >
-          <Text className="text-white text-[30px]">Emergency</Text>
-          {/* style={[styles.buttonText, { fontSize: 30 }]}>Emergency</Text> */}
-        </TouchableOpacity>
-      </View>
-      {/* request icons */}
-      <View className="flex-6 bg-[#f0f9ff]">
-        {/* style={[styles.container, { flex: 6, backgroundColor: "white" }]}> */}
-        <FlatList
-          data={data}
-          numColumns={2} // 3 columns
-          renderItem={({ item }) => <BoxItem item={item} />}
-          keyExtractor={(item) => item.id}
-        />
-      </View>
-      {/* Footer: Room # Bed # */}
-      <View
-        style={{
-          flex: 0.5,
-          backgroundColor: "#FFFFFB",
-          paddingLeft: 10,
-          justifyContent: "center",
-        }}
-      >
-        {/* <Text>Scanned QR Code Data:</Text> */}
-        <Text
-          className="font-bold text-[23px] text-black"
-          // style={{ fontWeight: "bold", fontSize: 23 }}
-        >
-          {qrCodeData}
-        </Text>
-      </View>
+    <TouchableOpacity style={styles.box} onPress={() => onPress(item)}>
+      <Image source={item.imageSource} style={styles.image} />
+      <Text style={styles.text}>{item.text}</Text>
+    </TouchableOpacity>
+  );
+};
+
+const HomePage = () => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const medplum = new MedplumClient();
+
+  const clientId = "26783641-2608-46d7-9875-1a57658e978f"
+  const clientSecret = "8869347129b106856c90d73d9242a1a0e267c212fdb8359ccbbe8eb438ef9af2"
+
+  const login = async () => {
+    await medplum.startClientLogin(clientId, clientSecret);
+  }
+
+  useEffect(() => {
+    const loadData = async () => {
+      await login();
+    };
+
+    loadData();
+  }, []);
+
+  const handlePress = (item) => {
+    setSelectedItem(item);
+    setModalVisible(true);
+  };
+
+  const getCurrentDateTimeInEST = () => {
+    const date = new Date();
+  
+    // // Convert the UTC date to EST using toLocaleString
+    // const estDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  
+    // // Format it to the FHIR `dateTime` format
+    // // return date.toISOString().split('.')[0] + '-05:00';  // EST is UTC-5
+    return date.toISOString()
+  }
+
+  const handleConfirm = async(type) => {
+    // Handle the confirmation action here
+    // console.log('Confirmed:', selectedItem.text);
+    await medplum.createResource({
+      resourceType: 'Task',
+      status: 'requested',
+      intent: 'unknown',
+      owner: {
+        reference: "Practitioner/b292f7a7-0adc-40db-bb76-6245b8411fda",
+        id: "b292f7a7-0adc-40db-bb76-6245b8411fda",
+        display: "Padmaashini Sukumaran"
+      },
+      requester: {
+        reference: "Patient/841396bb-4ef1-4ef7-abf1-418cae990bac",
+        id: "841396bb-4ef1-4ef7-abf1-418cae990bac",
+        display: "John Smith"
+      },
+      code: {
+        text: type
+      },
+      authoredOn: getCurrentDateTimeInEST()
+
+    });
+    setModalVisible(false);
+  };
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={data}
+        numColumns={numColumns}
+        renderItem={({ item }) => <BoxItem item={item} onPress={handlePress} />}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContainer}
+      />
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Confirm your request for {selectedItem?.text}</Text>
+            <TouchableOpacity
+              style={[styles.button, styles.buttonConfirm]}
+              onPress={() => handleConfirm(selectedItem?.text)}>
+              <Text style={styles.textStyle}>Yes</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => setModalVisible(!modalVisible)}>
+              <Text style={styles.textStyle}>No</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      {/* Add Footer if necessary */}
     </View>
   );
 };
+
 export default HomePage;
 
-// const styles = StyleSheet.create({
-// container: {
-//   flex: 1, // Make the container flex to take the available space
-//   // justifyContent: "center", // Center content vertically
-//   // alignItems: "center", // Center content horizontally
-//   backgroundColor: "white",
-// },
-// button: {
-//   backgroundColor: "#FF0000",
-//   // paddingHorizontal: 10,
-//   // paddingVertical: 30,
-//   borderRadius: 10,
-//   width: "80%",
-//   height: "85%",
-//   alignContent: "center",
-//   alignItems: "center",
-//   justifyContent: "center",
-//   borderWidth: 2,
-//   borderColor: "black",
-// },
-// buttonText: {
-//   color: "white",
-//   fontSize: 16,
-// },
-// row: {
-//   flexDirection: "row", // Horizontal layout within rows
-//   justifyContent: "space-around", // Spacing between items in rows
-//   alignItems: "center", // Center items vertically within rows
-// },
-// item: {
-//   alignItems: "center", // Center items horizontally
-// },
-// text: {
-//   marginTop: 10, // Spacing between icon and text
-//   fontSize: 30,
-// },
-// box: {
-//   flex: 1,
-//   justifyContent: "center",
-//   alignItems: "center",
-//   borderWidth: 1.5,
-//   borderColor: "black",
-//   borderRadius: 15,
-//   margin: 10,
-//   // height: "50",
-// },
-// });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F7F7F7', // Light gray background
+  },
+  header: {
+    paddingTop: 20,
+    paddingBottom: 20,
+    backgroundColor: '#4A90E2', // Medium blue background for the header
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#307AB7', // Slightly darker blue for the border
+  },
+  headerText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFFFFF', // White text for contrast
+  },
+  listContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 10,
+  },
+  box: {
+    backgroundColor: '#FFFFFF', // White tiles for a clean look
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 10,
+    width: tileSize - 20,
+    height: tileSize,
+    elevation: 2, // Add slight shadow for depth (Android)
+    shadowColor: '#000', // Shadow for iOS
+    shadowOffset: { width: 0, height: 2 }, // Shadow for iOS
+    shadowOpacity: 0.1, // Shadow for iOS
+    shadowRadius: 2, // Shadow for iOS
+    borderRadius: 15,
+  },
+  image: {
+    width: 80,
+    height: 80,
+    margin: 10,
+  },
+  text: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333333', // Darker text for readability
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  button: {
+    borderRadius: 10, // Removed border radius for a rectangular look
+    padding: 10,
+    elevation: 2,
+    marginVertical: 5,
+    width: '100%', // Set button width to full-width
+    justifyContent: 'center',
+  },
+  buttonClose: {
+    backgroundColor: '#cad5e3',
+  },
+  buttonConfirm: {
+    backgroundColor: '#cad5e3', // Green color for confirmation
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+});
