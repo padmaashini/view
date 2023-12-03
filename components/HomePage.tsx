@@ -10,6 +10,9 @@ import {
   Modal
 } from 'react-native';
 import { MedplumClient } from '@medplum/core';
+import { Audio } from 'expo-av';
+import { Recording } from 'expo-av/build/Audio';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
 const numColumns = 2;
@@ -39,6 +42,74 @@ const BoxItem = ({ item, onPress }) => {
 const HomePage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [recording, setRecording] = useState(Recording | null); 
+
+  const startRecording = async () => {
+    try {
+      await Audio.requestPermissionsAsync(); 
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      })
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
+     );
+     setRecording(recording);
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+  }
+  // const sendAudioToBackend = async (audioUri) => {
+  //   const formData = new FormData();
+  //   formData.append('audio', {
+  //     uri: audioUri,
+  //     type: 'audio/mpeg', // Adjust the MIME type as necessary
+  //     name: 'audiofile.mp3',
+  //   });
+  //   console.log('formData', formData)
+  //   try {
+  //     const response = await fetch('http://127.0.0.1:8000/parse-audio/', {
+  //       method: 'POST',
+  //       body: formData,
+  //       // Do not set Content-Type header manually
+  //     });
+  //     const responseData = await response.json();
+  //     console.log('Server response:', responseData);
+  //   } catch (error) {
+  //     console.error('Error sending audio file:', error);
+  //   }
+  // };
+
+  // ...
+
+const sendAudioToBackend = async (audioUri) => {
+  try {
+    const response = await fetch(audioUri);
+    const blob = await response.blob(); // Convert Blob URL to Blob
+
+    const formData = new FormData();
+    formData.append('audio', blob, 'audiofile.mp3'); // Append Blob to FormData
+
+    const uploadResponse = await fetch('http://127.0.0.1:8000/parse-audio/', {
+      method: 'POST',
+      body: formData, // Send FormData as body
+      // Do not set Content-Type header manually
+    });
+    const responseData = await uploadResponse.json();
+    console.log('Server response:', responseData);
+  } catch (error) {
+    console.error('Error sending audio file:', error);
+  }
+};
+
+  
+  const stopRecording = async () => {
+    setRecording(undefined);
+    await recording.stopAndUnloadAsync();
+    const uri = recording.getURI(); 
+    console.log('audio', recording.getURI())
+    sendAudioToBackend(uri); // Function to send audio to backend
+  }
 
   const medplum = new MedplumClient();
 
@@ -131,6 +202,19 @@ const HomePage = () => {
         </View>
       </Modal>
       {/* Add Footer if necessary */}
+      <TouchableOpacity
+        style={styles.button} 
+        onPress={recording ? stopRecording : startRecording}
+      >
+        <Icon
+          name={recording ? 'stop-circle' : 'mic-circle'} // Change icon based on the recording state
+          size={30} // Set the size of the icon
+          color="white" // Set the color of the icon
+        />
+        <Text style={styles.textStyle}>
+          {recording ? 'Stop Recording' : 'Start Recording'}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
